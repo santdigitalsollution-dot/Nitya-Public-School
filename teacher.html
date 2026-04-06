@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Dashboard – Nitya Public School</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- QR scanning & generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/attendance.js"></script>
+<style>
+  *{font-family:'DM Sans',sans-serif}
+  .brand{font-family:'Playfair Display',serif}
+  body{background:#0a0f1e;color:#f1f5f9}
+  .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.09)}
+  .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1rem}
+  .btn{border-radius:.75rem;padding:.55rem 1.1rem;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s}
+  .btn-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0f1e}
+  .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(245,158,11,.35)}
+  .btn-ghost{background:rgba(255,255,255,0.07);color:#94a3b8;border:1px solid rgba(255,255,255,0.1)}
+  .btn-ghost:hover{background:rgba(255,255,255,0.12);color:#f1f5f9}
+  .btn-green{background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
+  .btn-red{background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+  .btn-blue{background:rgba(59,130,246,0.2);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)}
+  .nav-item{padding:.6rem 1rem;border-radius:.75rem;cursor:pointer;font-size:.85rem;transition:all .15s;color:#94a3b8}
+  .nav-item.active,.nav-item:hover{background:rgba(245,158,11,0.15);color:#f59e0b}
+  .tab-pill{padding:.4rem .9rem;border-radius:9999px;font-size:.75rem;cursor:pointer;transition:all .15s}
+  .tab-pill.active{background:#f59e0b;color:#0a0f1e;font-weight:700}
+  .tab-pill.inactive{background:rgba(255,255,255,0.07);color:#94a3b8}
+  input,select,textarea{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#f1f5f9;border-radius:.75rem;padding:.6rem 1rem;font-size:.85rem;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#f59e0b}
+  input::placeholder,textarea::placeholder{color:#475569}
+  select option{background:#1e293b}
+  #scanner-video{width:100%;border-radius:1rem;display:none}
+  #scanner-canvas{display:none}
+  .scan-ring{border:3px solid #f59e0b;border-radius:1rem;animation:scanPulse 1.5s ease-in-out infinite}
+  @keyframes scanPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.4)}50%{box-shadow:0 0 0 8px rgba(245,158,11,0)}}
+  .status-badge{padding:.2rem .6rem;border-radius:9999px;font-size:.7rem;font-weight:600}
+  .present{background:rgba(34,197,94,0.2);color:#4ade80}
+  .absent{background:rgba(239,68,68,0.2);color:#f87171}
+  table{width:100%;border-collapse:collapse}
+  th{padding:.7rem 1rem;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b;border-bottom:1px solid rgba(255,255,255,0.07)}
+  td{padding:.7rem 1rem;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,0.04)}
+  .sidebar{width:220px;min-width:220px}
+  @media(max-width:768px){.sidebar{display:none}.mobile-menu{display:flex}}
+  .toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;padding:.75rem 1.2rem;border-radius:.75rem;font-size:.82rem;font-weight:600;animation:slideUp .3s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- TOP NAV -->
+<header class="glass fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg bg-amber-500/25 border border-amber-400/30 flex items-center justify-center text-amber-300 text-xs font-bold">NPS</div>
+    <div>
+      <div class="brand text-white text-sm leading-tight">Nitya Public School</div>
+      <div class="text-xs text-slate-500">Teacher Portal · <span id="today-label"></span></div>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <div class="text-right hidden sm:block">
+      <div class="text-sm text-slate-200" id="user-name">—</div>
+      <div class="text-xs text-amber-400">Teacher</div>
+    </div>
+    <button onclick="doLogout()" class="btn btn-ghost text-xs">Logout</button>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="flex flex-1 pt-14">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar glass fixed left-0 top-14 bottom-0 p-4 flex flex-col gap-1 overflow-y-auto z-40">
+    <div class="text-xs text-slate-600 uppercase tracking-widest mb-2 px-2">Navigation</div>
+    <div onclick="showSection('att')"  class="nav-item active" id="nav-att">📋 Attendance</div>
+    <div onclick="showSection('worklog')" class="nav-item" id="nav-worklog">📝 Work Log</div>
+    <div onclick="showSection('qrgen')"   class="nav-item" id="nav-qrgen">🎫 QR Cards</div>
+    <div class="mt-auto pt-4 border-t border-white/5">
+      <div class="text-xs text-slate-700 text-center">Sant Digital Solution</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 ml-0 md:ml-56 p-5 space-y-5">
+
+    <!-- =========  ATTENDANCE SECTION  ========= -->
+    <section id="sec-att" class="space-y-4">
+
+      <!-- Teacher self check-in banner -->
+      <div class="card p-4 flex items-center justify-between">
+        <div>
+          <div class="text-sm font-semibold text-white">Your Attendance Today</div>
+          <div class="text-xs text-slate-400 mt-0.5">Tap to mark yourself present for <span id="today-date2">—</span></div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="teacher-att-status" class="status-badge absent">Not Marked</span>
+          <button onclick="markTeacherSelf()" class="btn btn-gold">Mark Present</button>
+        </div>
+      </div>
+
+      <!-- Attendance mode tabs + class picker -->
+      <div class="card p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="flex gap-2">
+            <div onclick="setAttMode('manual')"   class="tab-pill active"   id="mode-manual">✋ Manual</div>
+            <div onclick="setAttMode('qr')"       class="tab-pill inactive" id="mode-qr">📷 QR Scan</div>
+            <div onclick="setAttMode('biometric')" class="tab-pill inactive" id="mode-biometric">🖐 Biometric</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="class-select" onchange="loadStudents()" class="!w-36 text-xs">
+              <option value="">Select Class</option>
+              <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              <option>Class 4</option><option>Class 5</option><option>Class 6</option>
+              <option>Class 7</option><option>Class 8</option>
+            </select>
+            <input type="date" id="att-date" class="!w-40 text-xs" value="">
+          </div>
+        </div>
+
+        <!-- MANUAL MODE -->
+        <div id="panel-manual">
+          <div id="no-class-msg" class="text-center py-8 text-slate-500 text-sm">Select a class to load students</div>
+          <div id="student-table-wrap" class="hidden overflow-x-auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Roll No</th><th>Name</th><th>Father</th>
+                  <th>Aadhaar</th><th>Mobile</th><th>Present</th>
+                  <th>Month P</th><th>Fee</th>
+                </tr>
+              </thead>
+              <tbody id="student-tbody"></tbody>
+            </table>
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-white/8">
+              <div class="text-xs text-slate-500">
+                <span id="present-count" class="text-green-400 font-bold">0</span> present /
+                <span id="total-count" class="text-slate-400">0</span> total
+              </div>
+              <button onclick="submitManualAtt()" class="btn btn-gold">💾 Save Attendance</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR SCAN MODE -->
+        <div id="panel-qr" class="hidden space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-3">
+              <div class="relative">
+                <video id="scanner-video" autoplay playsinline class="scan-ring w-full h-56 object-cover rounded-xl bg-black/50"></video>
+                <canvas id="scanner-canvas" class="hidden"></canvas>
+                <div id="scan-placeholder" class="w-full h-56 rounded-xl bg-black/40 border border-white/10 flex flex-col items-center justify-center gap-2">
+                  <div class="text-4xl">📷</div>
+                  <div class="text-sm text-slate-400">Camera not started</div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="startQRScan()" id="btn-start-scan" class="btn btn-green flex-1">▶ Start Camera</button>
+                <button onclick="stopQRScan()"  id="btn-stop-scan"  class="btn btn-red flex-1 hidden">⏹ Stop</button>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 mb-2 font-medium">Scanned Today</div>
+              <div id="qr-scan-log" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                <div class="text-xs text-slate-600 text-center py-4">No scans yet</div>
+              </div>
+              <div class="mt-3 flex gap-2">
+                <button onclick="saveQRAttendance()" class="btn btn-gold flex-1">💾 Save All QR Scans</button>
+              </div>
+            </div>
+          </div>
+          <div class="card p-3 flex items-start gap-2">
+            <span class="text-amber-400 text-sm">ℹ</span>
+            <div class="text-xs text-slate-400">QR format: <code class="text-amber-300">NPS|ROLL|NAME|CLASS</code> — printed on each student's ID card. Scanned students are auto-marked Present.</div>
+          </div>
+        </div>
+
+        <!-- BIOMETRIC MODE -->
+        <div id="panel-biometric" class="hidden space-y-3">
+          <div class="card p-4 space-y-3">
+            <div class="text-sm font-medium text-white">Biometric Device (USB/Bluetooth)</div>
+            <p class="text-xs text-slate-400">Connect a USB fingerprint reader that sends <code class="text-amber-300">ROLL:XXXXXXX\n</code> via serial port. Requires Chrome/Edge on desktop.</p>
+            <div class="flex gap-2">
+              <button onclick="connectBiometric()" class="btn btn-blue">🖐 Connect Device</button>
+              <span id="bio-status" class="text-xs text-slate-500 self-center">Not connected</span>
+            </div>
+            <div id="bio-log" class="space-y-1.5 max-h-48 overflow-y-auto mt-2">
+              <div class="text-xs text-slate-600 text-center py-3">Waiting for fingerprint…</div>
+            </div>
+            <button onclick="saveBioAttendance()" class="btn btn-gold w-full mt-2">💾 Save Biometric Records</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =========  WORK LOG SECTION  ========= -->
+    <section id="sec-worklog" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Daily Work Log</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Date</label>
+            <input type="date" id="wl-date">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Class</label>
+            <select id="wl-class">
+              <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              <option>Class 4</option><option>Class 5</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Subject</label>
+            <input type="text" id="wl-subject" placeholder="e.g. Mathematics">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Topic Covered</label>
+            <input type="text" id="wl-topic" placeholder="e.g. Fractions – Chapter 5">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-xs text-slate-400 block mb-1">Activity Description</label>
+            <textarea id="wl-desc" rows="3" placeholder="Describe today's classroom activity…"></textarea>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-xs text-slate-400 block mb-1">Upload Activity Image</label>
+            <input type="file" id="wl-image" accept="image/*" class="text-xs">
+          </div>
+        </div>
+        <button onclick="submitWorkLog()" class="btn btn-gold mt-4">💾 Save Work Log</button>
+      </div>
+
+      <!-- Previous logs -->
+      <div class="card p-5">
+        <div class="text-sm font-semibold text-white mb-3">Recent Work Logs</div>
+        <div id="worklog-list" class="space-y-2 text-xs text-slate-400">Loading…</div>
+      </div>
+    </section>
+
+    <!-- =========  QR CARD GENERATOR  ========= -->
+    <section id="sec-qrgen" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Generate Student QR Cards</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Roll Number</label>
+            <input type="text" id="qrg-roll" placeholder="e.g. 2024001">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Student Name</label>
+            <input type="text" id="qrg-name" placeholder="Full name">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Class</label>
+            <select id="qrg-class">
+              <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              <option>Class 4</option><option>Class 5</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="genQRCard()" class="btn btn-gold mb-5">🎫 Generate QR</button>
+        <div id="qr-card-preview" class="hidden card p-5 max-w-xs mx-auto text-center">
+          <div class="text-sm font-bold text-white mb-1" id="qrc-name">—</div>
+          <div class="text-xs text-slate-400 mb-3" id="qrc-meta">—</div>
+          <div id="qrc-code" class="mx-auto w-32 h-32 flex items-center justify-center"></div>
+          <div class="text-xs text-amber-400 mt-2">Nitya Public School</div>
+          <button onclick="printQRCard()" class="btn btn-ghost text-xs mt-3 w-full">🖨 Print Card</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast hidden"></div>
+
+<script>
+// ------- Auth guard -------
+if (!Session.requireRole("teacher","principal")) {}
+
+const sess = Session.get();
+document.getElementById("user-name").textContent = sess.name || sess.mobile;
+const todayStr = today();
+document.getElementById("today-label").textContent = monthLabel();
+document.getElementById("today-date2").textContent = todayStr;
+document.getElementById("att-date").value = todayStr;
+document.getElementById("wl-date").value  = todayStr;
+
+// ------- Section nav -------
+function showSection(id) {
+  ["att","worklog","qrgen"].forEach(s => {
+    document.getElementById("sec-"+s).classList.toggle("hidden", s !== id);
+    document.getElementById("nav-"+s).classList.toggle("active", s === id);
+  });
+}
+
+// ------- Attendance mode tabs -------
+let attMode = "manual";
+function setAttMode(m) {
+  attMode = m;
+  ["manual","qr","biometric"].forEach(x => {
+    document.getElementById("panel-"+x).classList.toggle("hidden", x !== m);
+    document.getElementById("mode-"+x).classList.toggle("active", x === m);
+    document.getElementById("mode-"+x).classList.toggle("inactive", x !== m);
+  });
+  if (m !== "qr") Attendance.stopScanner();
+}
+
+// ------- Teacher self attendance -------
+let teacherMarked = false;
+async function markTeacherSelf() {
+  if (teacherMarked) return;
+  const res = await Attendance.submitBatch(
+    [{ roll: sess.mobile, name: sess.name, status: "P" }],
+    todayStr, "teacher"
+  );
+  if (res && res.success) {
+    teacherMarked = true;
+    const el = document.getElementById("teacher-att-status");
+    el.textContent = "Present ✓";
+    el.className = "status-badge present";
+    toast("Your attendance marked ✓", "green");
+  } else {
+    toast("Failed – check connection", "red");
+  }
+}
+
+// ------- Load students for manual -------
+let studentsData = [];
+async function loadStudents() {
+  const cls = document.getElementById("class-select").value;
+  if (!cls) return;
+  document.getElementById("no-class-msg").classList.add("hidden");
+  const msg = document.getElementById("student-table-wrap");
+  msg.classList.remove("hidden");
+  document.getElementById("student-tbody").innerHTML =
+    '<tr><td colspan="8" class="text-center py-4 text-slate-500 text-xs">Loading…</td></tr>';
+
+  const res = await API.getStudents({ cls, session: CONFIG.SESSION_LABEL });
+  studentsData = (res && res.data) || demoStudents(cls);
+  buildAttendanceTable("student-tbody", studentsData);
+  updateCounts();
+  document.querySelectorAll(".att-toggle").forEach(cb =>
+    cb.addEventListener("change", updateCounts)
+  );
+}
+
+function demoStudents(cls) {
+  return [1,2,3,4,5].map(i => ({
+    roll: `2024${String(i).padStart(3,"0")}`, name: `Student ${i}`,
+    father: `Father ${i}`, aadhaar: "123456789012", mobile: "9876543210",
+    status: i < 4 ? "P" : "A", presentCount: 18, feeStatus: i%2===0 ? "Paid":"Due",
+  }));
+}
+
+function updateCounts() {
+  const all = document.querySelectorAll(".att-toggle");
+  const p = document.querySelectorAll(".att-toggle:checked").length;
+  document.getElementById("present-count").textContent = p;
+  document.getElementById("total-count").textContent = all.length;
+}
+
+async function submitManualAtt() {
+  const records = Attendance.collectManual("student-tbody");
+  const date = document.getElementById("att-date").value;
+  const res = await Attendance.submitBatch(records, date, "student");
+  toast(res && res.success ? `Saved ${records.length} records ✓` : "Save failed – check connection", res && res.success ? "green" : "red");
+}
+
+// ------- QR Scan -------
+let qrScanned = {};
+async function startQRScan() {
+  const v = document.getElementById("scanner-video");
+  const c = document.getElementById("scanner-canvas");
+  document.getElementById("scan-placeholder").classList.add("hidden");
+  v.style.display = "block";
+  const ok = await Attendance.startScanner(v, c, onQRDetected);
+  if (ok) {
+    document.getElementById("btn-start-scan").classList.add("hidden");
+    document.getElementById("btn-stop-scan").classList.remove("hidden");
+  } else {
+    document.getElementById("scan-placeholder").classList.remove("hidden");
+    v.style.display = "none";
+    toast("Camera access denied", "red");
+  }
+}
+
+function stopQRScan() {
+  Attendance.stopScanner();
+  document.getElementById("scanner-video").style.display = "none";
+  document.getElementById("scan-placeholder").classList.remove("hidden");
+  document.getElementById("btn-start-scan").classList.remove("hidden");
+  document.getElementById("btn-stop-scan").classList.add("hidden");
+}
+
+function onQRDetected(raw) {
+  const parsed = Attendance.parseQRPayload(raw);
+  if (!parsed || qrScanned[parsed.roll]) return;
+  qrScanned[parsed.roll] = { ...parsed, status: "P", time: new Date().toLocaleTimeString() };
+  refreshQRLog();
+  toast(`Scanned: ${parsed.name}`, "green");
+}
+
+function refreshQRLog() {
+  const log = document.getElementById("qr-scan-log");
+  const entries = Object.values(qrScanned);
+  if (!entries.length) { log.innerHTML = '<div class="text-xs text-slate-600 text-center py-4">No scans yet</div>'; return; }
+  log.innerHTML = entries.map(e => `
+    <div class="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+      <div>
+        <span class="text-xs font-medium text-white">${e.name}</span>
+        <span class="text-xs text-slate-500 ml-2">${e.roll} · ${e.cls}</span>
+      </div>
+      <span class="status-badge present text-xs">${e.time}</span>
+    </div>`).join("");
+}
+
+async function saveQRAttendance() {
+  const records = Object.values(qrScanned);
+  if (!records.length) { toast("No QR scans to save", "red"); return; }
+  const date = document.getElementById("att-date").value;
+  const res = await Attendance.submitBatch(records, date, "student");
+  toast(res && res.success ? `Saved ${records.length} QR records ✓` : "Save failed", res && res.success ? "green" : "red");
+}
+
+// ------- Biometric -------
+let bioRecords = {};
+async function connectBiometric() {
+  const ok = await Attendance.connectBiometric(onBioMatch);
+  document.getElementById("bio-status").textContent = ok ? "✓ Connected" : "Connection failed";
+  document.getElementById("bio-status").className = ok ? "text-xs text-green-400 self-center" : "text-xs text-red-400 self-center";
+}
+
+function onBioMatch(roll) {
+  if (bioRecords[roll]) return;
+  bioRecords[roll] = { roll, status: "P", time: new Date().toLocaleTimeString() };
+  const log = document.getElementById("bio-log");
+  log.innerHTML = Object.values(bioRecords).map(r =>
+    `<div class="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+      <span class="text-xs text-white font-mono">${r.roll}</span>
+      <span class="status-badge present text-xs">${r.time}</span>
+    </div>`
+  ).join("") || '<div class="text-xs text-slate-600 text-center py-3">Waiting…</div>';
+  toast(`Biometric: Roll ${roll}`, "green");
+}
+
+async function saveBioAttendance() {
+  const records = Object.values(bioRecords);
+  if (!records.length) { toast("No biometric records", "red"); return; }
+  const res = await Attendance.submitBatch(records, document.getElementById("att-date").value, "student");
+  toast(res && res.success ? `Saved ${records.length} biometric records ✓` : "Save failed", res && res.success ? "green" : "red");
+}
+
+// ------- Work Log -------
+async function submitWorkLog() {
+  const data = {
+    date: document.getElementById("wl-date").value,
+    cls: document.getElementById("wl-class").value,
+    subject: document.getElementById("wl-subject").value,
+    topic: document.getElementById("wl-topic").value,
+    desc: document.getElementById("wl-desc").value,
+    teacherMobile: sess.mobile,
+  };
+  if (!data.subject || !data.topic) { toast("Subject & Topic required", "red"); return; }
+  const res = await API.saveWorkLog(data);
+  toast(res && res.success ? "Work log saved ✓" : "Save failed", res && res.success ? "green" : "red");
+}
+
+// ------- QR Card Generator -------
+function genQRCard() {
+  const roll = document.getElementById("qrg-roll").value.trim();
+  const name = document.getElementById("qrg-name").value.trim();
+  const cls  = document.getElementById("qrg-class").value;
+  if (!roll || !name) { toast("Enter Roll & Name", "red"); return; }
+  const payload = Attendance.buildQRPayload(roll, name, cls);
+  document.getElementById("qrc-name").textContent = name;
+  document.getElementById("qrc-meta").textContent = `${roll} · ${cls}`;
+  document.getElementById("qr-card-preview").classList.remove("hidden");
+  Attendance.generateQR("qrc-code", payload, 128);
+}
+
+function printQRCard() { window.print(); }
+
+// ------- Helpers -------
+function toast(msg, type = "green") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = `toast ${type === "green" ? "bg-green-900/90 text-green-300 border border-green-700" : "bg-red-900/90 text-red-300 border border-red-700"}`;
+  el.classList.remove("hidden");
+  setTimeout(() => el.classList.add("hidden"), 3000);
+}
+
+function doLogout() { Session.clear(); location.href = "index.html"; }
+</script>
+</body>
+</html>

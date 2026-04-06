@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login – Nitya Public School ERP</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="js/config.js"></script>
+<style>
+  *{font-family:'DM Sans',sans-serif}
+  .brand{font-family:'Playfair Display',serif}
+  body{background:#0a0f1e;min-height:100vh}
+  .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1)}
+  .tab-active{background:#f59e0b;color:#0a0f1e;font-weight:700}
+  .tab-inactive{color:#94a3b8}
+  .btn-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0f1e;font-weight:700;transition:all 0.2s}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,158,11,.4)}
+  input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#f1f5f9;transition:border-color .2s}
+  input:focus{outline:none;border-color:#f59e0b;background:rgba(245,158,11,0.06)}
+  input::placeholder{color:#475569}
+  .orb{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;animation:pulse 8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.7}}
+  .fade-in{animation:fadeIn .4s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body class="flex flex-col min-h-screen relative overflow-hidden">
+
+<!-- Ambient orbs -->
+<div class="orb w-[500px] h-[500px] bg-amber-600/25 -top-32 -left-32"></div>
+<div class="orb w-[400px] h-[400px] bg-indigo-700/20 -bottom-20 -right-20" style="animation-delay:3s"></div>
+<div class="orb w-64 h-64 bg-blue-500/10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="animation-delay:5s"></div>
+
+<!-- Header -->
+<header class="glass fixed top-0 left-0 right-0 z-50 px-6 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400/40 to-amber-600/20 border border-amber-400/40 flex items-center justify-center">
+      <span class="text-amber-300 font-bold text-xs">NPS</span>
+    </div>
+    <div>
+      <div class="brand text-white text-sm leading-tight">Nitya Public School</div>
+      <div class="text-xs text-slate-500">Bhadewara, Karchhana, Prayagraj</div>
+    </div>
+  </div>
+  <div class="hidden sm:block text-xs text-slate-600">Smart ERP System · 2025-26</div>
+</header>
+
+<!-- Main login card -->
+<main class="flex-1 flex items-center justify-center px-4 mt-16">
+  <div class="glass rounded-2xl p-8 w-full max-w-md fade-in">
+
+    <!-- Icon + title -->
+    <div class="text-center mb-7">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/30 to-amber-700/10 border border-amber-500/30 mx-auto flex items-center justify-center mb-4">
+        <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+      </div>
+      <h1 class="brand text-white text-2xl">Sign In</h1>
+      <p class="text-slate-400 text-sm mt-1">Select your role and enter credentials</p>
+    </div>
+
+    <!-- Role tabs -->
+    <div class="flex rounded-xl overflow-hidden border border-white/10 mb-6">
+      <button onclick="setRole('teacher')"    id="tab-teacher"    class="flex-1 py-2.5 text-xs sm:text-sm transition-all rounded-xl tab-active">👩‍🏫 Teacher</button>
+      <button onclick="setRole('accountant')" id="tab-accountant" class="flex-1 py-2.5 text-xs sm:text-sm transition-all tab-inactive">💰 Accountant</button>
+      <button onclick="setRole('principal')"  id="tab-principal"  class="flex-1 py-2.5 text-xs sm:text-sm transition-all tab-inactive">🏫 Principal</button>
+    </div>
+
+    <div id="role-hint" class="text-xs text-amber-400/70 text-center mb-4 -mt-2">Logging in as Teacher</div>
+
+    <!-- Form -->
+    <div class="space-y-4">
+      <div>
+        <label class="text-slate-300 text-sm block mb-1.5">Mobile Number</label>
+        <input id="inp-mobile" type="tel" maxlength="10" placeholder="10-digit mobile number"
+          class="w-full rounded-xl px-4 py-3 text-sm">
+      </div>
+      <div>
+        <label class="text-slate-300 text-sm block mb-1.5">Password</label>
+        <div class="relative">
+          <input id="inp-password" type="password" placeholder="Enter password"
+            class="w-full rounded-xl px-4 py-3 text-sm pr-12">
+          <button type="button" onclick="togglePwd()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-amber-400 transition-colors text-xs">👁</button>
+        </div>
+      </div>
+
+      <div id="err-msg" class="hidden text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+
+      <button onclick="handleLogin()" class="btn-gold w-full rounded-xl py-3 text-sm mt-2">
+        Sign In →
+      </button>
+    </div>
+
+    <!-- Demo hint -->
+    <div class="mt-5 pt-4 border-t border-white/8">
+      <p class="text-xs text-slate-600 text-center">Demo: mobile <span class="text-slate-500">9999999999</span> · password <span class="text-slate-500">admin123</span></p>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="text-center py-4 text-xs text-slate-700">
+  Developed and Powered by <span class="text-slate-500">Sant Digital Solution</span>
+</footer>
+
+<script>
+let currentRole = "teacher";
+
+function setRole(role) {
+  currentRole = role;
+  ["teacher","accountant","principal"].forEach(r => {
+    const t = document.getElementById("tab-"+r);
+    t.className = t.className.replace("tab-active","tab-inactive").replace("tab-inactive","tab-inactive");
+    t.classList.remove("tab-active");
+    t.classList.add("tab-inactive");
+  });
+  const active = document.getElementById("tab-"+role);
+  active.classList.remove("tab-inactive");
+  active.classList.add("tab-active");
+  const labels = {teacher:"Teacher",accountant:"Accountant",principal:"Principal"};
+  document.getElementById("role-hint").textContent = "Logging in as " + labels[role];
+}
+
+function togglePwd() {
+  const i = document.getElementById("inp-password");
+  i.type = i.type === "password" ? "text" : "password";
+}
+
+async function handleLogin() {
+  const mobile = document.getElementById("inp-mobile").value.trim();
+  const password = document.getElementById("inp-password").value.trim();
+  const errEl = document.getElementById("err-msg");
+  errEl.classList.add("hidden");
+
+  if (!Validate.mobile(mobile)) {
+    errEl.textContent = "Enter a valid 10-digit mobile number.";
+    errEl.classList.remove("hidden"); return;
+  }
+  if (!password) {
+    errEl.textContent = "Password is required.";
+    errEl.classList.remove("hidden"); return;
+  }
+
+  // Demo login (replace with API.login() for production)
+  if (mobile === "9999999999" && password === "admin123") {
+    Session.set(currentRole, "Demo User", mobile);
+    const pages = { teacher:"teacher.html", accountant:"accountant.html", principal:"principal.html" };
+    location.href = pages[currentRole];
+    return;
+  }
+
+  // Production: verify against Google Sheets
+  const res = await API.login({ mobile, password, role: currentRole });
+  if (res && res.success) {
+    Session.set(currentRole, res.name, mobile);
+    const pages = { teacher:"teacher.html", accountant:"accountant.html", principal:"principal.html" };
+    location.href = pages[currentRole];
+  } else {
+    errEl.textContent = (res && res.error) || "Invalid credentials. Try again.";
+    errEl.classList.remove("hidden");
+  }
+}
+
+// If already logged in, redirect
+if (Session.valid()) {
+  const pages = { teacher:"teacher.html", accountant:"accountant.html", principal:"principal.html" };
+  location.href = pages[Session.get().role] || "index.html";
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accountant – Nitya Public School</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/config.js"></script>
+<style>
+  *{font-family:'DM Sans',sans-serif}
+  .brand{font-family:'Playfair Display',serif}
+  body{background:#0a0f1e;color:#f1f5f9}
+  .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.09)}
+  .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1rem}
+  .btn{border-radius:.75rem;padding:.55rem 1.1rem;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;border:none}
+  .btn-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0f1e}
+  .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(245,158,11,.35)}
+  .btn-ghost{background:rgba(255,255,255,0.07);color:#94a3b8;border:1px solid rgba(255,255,255,0.1)}
+  .btn-ghost:hover{background:rgba(255,255,255,0.12);color:#f1f5f9}
+  .nav-item{padding:.6rem 1rem;border-radius:.75rem;cursor:pointer;font-size:.85rem;transition:all .15s;color:#94a3b8}
+  .nav-item.active,.nav-item:hover{background:rgba(245,158,11,0.15);color:#f59e0b}
+  label{font-size:.75rem;color:#94a3b8;display:block;margin-bottom:.3rem}
+  input,select,textarea{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#f1f5f9;border-radius:.75rem;padding:.6rem 1rem;font-size:.82rem;width:100%}
+  input:focus,select:focus{outline:none;border-color:#f59e0b}
+  input::placeholder{color:#475569}
+  select option{background:#1e293b}
+  table{width:100%;border-collapse:collapse}
+  th{padding:.6rem 1rem;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:#64748b;border-bottom:1px solid rgba(255,255,255,0.07)}
+  td{padding:.65rem 1rem;font-size:.8rem;border-bottom:1px solid rgba(255,255,255,0.04)}
+  .badge{padding:.18rem .55rem;border-radius:9999px;font-size:.68rem;font-weight:600}
+  .paid{background:rgba(34,197,94,0.15);color:#4ade80}
+  .due{background:rgba(239,68,68,0.15);color:#f87171}
+  .sidebar{width:220px;min-width:220px}
+  .toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;padding:.75rem 1.2rem;border-radius:.75rem;font-size:.82rem;font-weight:600}
+  .stat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:1.25rem}
+
+  /* Print styles for fee slip */
+  @media print {
+    body > *:not(#print-area) { display: none !important; }
+    #print-area { display: block !important; font-family: serif; color: black; background: white; padding: 20px; }
+    #print-area h2 { font-size: 18px; font-weight: bold; text-align: center; }
+    #print-area table { width: 100%; border-collapse: collapse; }
+    #print-area td, #print-area th { border: 1px solid #999; padding: 6px; font-size: 12px; }
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- TOP NAV -->
+<header class="glass fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg bg-amber-500/25 border border-amber-400/30 flex items-center justify-center text-amber-300 text-xs font-bold">NPS</div>
+    <div>
+      <div class="brand text-white text-sm">Nitya Public School</div>
+      <div class="text-xs text-slate-500">Accountant Portal</div>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <span class="text-sm text-slate-300" id="user-name">—</span>
+    <button onclick="doLogout()" class="btn btn-ghost text-xs">Logout</button>
+  </div>
+</header>
+
+<div class="flex flex-1 pt-14">
+  <!-- SIDEBAR -->
+  <aside class="sidebar glass fixed left-0 top-14 bottom-0 p-4 flex flex-col gap-1 overflow-y-auto z-40">
+    <div class="text-xs text-slate-600 uppercase tracking-widest mb-2 px-2">Modules</div>
+    <div onclick="showSection('admission')"   class="nav-item active" id="nav-admission">📋 Admission</div>
+    <div onclick="showSection('fee')"         class="nav-item" id="nav-fee">💰 Fee Collection</div>
+    <div onclick="showSection('salary')"      class="nav-item" id="nav-salary">👩‍💼 Salary</div>
+    <div onclick="showSection('expenditure')" class="nav-item" id="nav-expenditure">📊 Expenditure</div>
+    <div class="mt-auto pt-4 border-t border-white/5 text-xs text-slate-700 text-center">Sant Digital Solution</div>
+  </aside>
+
+  <main class="flex-1 ml-0 md:ml-56 p-5 space-y-5">
+
+    <!-- ====== ADMISSION ====== -->
+    <section id="sec-admission" class="space-y-4">
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="brand text-white text-lg">New Admission</h2>
+          <div class="text-xs text-slate-500">Session: <span class="text-amber-400" id="sess-label">—</span></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div><label>Auto Roll Number</label><input id="a-roll" readonly placeholder="Auto-generated" class="!bg-amber-500/10 !border-amber-500/30 text-amber-300"></div>
+          <div><label>Student Name *</label><input id="a-name" placeholder="Full name"></div>
+          <div><label>Father's Name *</label><input id="a-father" placeholder="Father's full name"></div>
+          <div><label>Class *</label>
+            <select id="a-class">
+              <option value="">Select Class</option>
+              <option>Nursery</option><option>KG</option>
+              <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              <option>Class 4</option><option>Class 5</option><option>Class 6</option>
+              <option>Class 7</option><option>Class 8</option>
+            </select>
+          </div>
+          <div><label>Aadhaar Number *</label><input id="a-aadhaar" placeholder="12-digit number" maxlength="12"></div>
+          <div><label>Mobile Number *</label><input id="a-mobile" placeholder="10-digit" maxlength="10"></div>
+          <div><label>Age</label><input id="a-age" type="number" placeholder="Age in years"></div>
+          <div><label>Religion</label><input id="a-religion" placeholder="e.g. Hindu"></div>
+          <div><label>Caste</label><input id="a-caste" placeholder="Category"></div>
+          <div><label>Admission Date *</label><input id="a-date" type="date"></div>
+          <div><label>Admission Fee (₹)</label><input id="a-admfee" type="number" placeholder="0"></div>
+          <div><label>Deposited Fee (₹)</label><input id="a-depfee" type="number" placeholder="0"></div>
+          <div><label>Monthly Fee (₹) *</label><input id="a-monthly" type="number" placeholder="0"></div>
+          <div><label>Transport Fee (₹)</label><input id="a-transport" type="number" placeholder="0 (optional)"></div>
+        </div>
+        <div id="adm-err" class="hidden text-red-400 text-xs mt-3 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+        <div class="flex gap-3 mt-5 flex-wrap">
+          <button onclick="submitAdmission()" class="btn btn-gold">💾 Save Admission</button>
+          <button onclick="generateRoll()" class="btn btn-ghost">🔄 Regenerate Roll No</button>
+        </div>
+      </div>
+
+      <!-- QR preview after admission -->
+      <div id="adm-success" class="hidden card p-5">
+        <div class="text-sm font-semibold text-green-400 mb-3">✓ Admission Saved – Student QR Generated</div>
+        <div class="flex flex-wrap gap-6 items-start">
+          <div class="text-center">
+            <div id="adm-qr-code" class="w-28 h-28"></div>
+            <div class="text-xs text-slate-400 mt-1" id="adm-qr-label">—</div>
+          </div>
+          <div class="flex-1 text-sm space-y-1">
+            <div><span class="text-slate-500">Name:</span> <span id="adm-out-name" class="text-white">—</span></div>
+            <div><span class="text-slate-500">Roll:</span> <span id="adm-out-roll" class="text-amber-400 font-mono">—</span></div>
+            <div><span class="text-slate-500">Class:</span> <span id="adm-out-class" class="text-white">—</span></div>
+            <div><span class="text-slate-500">Monthly Fee:</span> <span id="adm-out-fee" class="text-white">—</span></div>
+          </div>
+          <button onclick="printFeeSlip('admission')" class="btn btn-gold self-start">🖨 Print Slip</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== FEE COLLECTION ====== -->
+    <section id="sec-fee" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Fee Collection</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div class="sm:col-span-2">
+            <label>Search Student by Roll Number</label>
+            <div class="flex gap-2">
+              <input id="fee-roll-search" placeholder="Enter roll number" class="flex-1">
+              <button onclick="fetchStudentFee()" class="btn btn-gold whitespace-nowrap">Search</button>
+            </div>
+          </div>
+          <div>
+            <label>Fee Month</label>
+            <input id="fee-month" type="month">
+          </div>
+        </div>
+
+        <!-- Auto-fetched student info -->
+        <div id="fee-student-info" class="hidden card p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+          <div><div class="text-xs text-slate-500">Name</div><div id="fsi-name" class="text-white font-medium">—</div></div>
+          <div><div class="text-xs text-slate-500">Class</div><div id="fsi-class" class="text-white">—</div></div>
+          <div><div class="text-xs text-slate-500">Monthly Fee</div><div id="fsi-monthly" class="text-amber-400 font-bold">—</div></div>
+          <div><div class="text-xs text-slate-500">Pending Till Now</div><div id="fsi-pending" class="text-red-400 font-bold">—</div></div>
+        </div>
+
+        <div id="fee-form" class="hidden space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div><label>Months Paying For</label><input id="fee-months" type="number" value="1" min="1" max="12"></div>
+            <div><label>Amount Deposited (₹) *</label><input id="fee-deposited" type="number" placeholder="Amount paid"></div>
+            <div><label>Transport Fee (₹)</label><input id="fee-transport" type="number" placeholder="0"></div>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="submitFee()" class="btn btn-gold">💾 Collect Fee</button>
+            <button onclick="printFeeSlip('fee')" class="btn btn-ghost">🖨 Print Slip</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent fees table -->
+      <div class="card p-5">
+        <div class="text-sm font-semibold text-white mb-3">Recent Transactions</div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Month</th><th>Paid (₹)</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody id="fee-tbody">
+              <tr><td colspan="7" class="text-center text-slate-500 py-4 text-xs">No transactions loaded</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SALARY ====== -->
+    <section id="sec-salary" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Teacher Salary Entry</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div><label>Teacher Name / Mobile</label>
+            <div class="flex gap-2">
+              <input id="sal-search" placeholder="Search teacher">
+              <button onclick="fetchTeacher()" class="btn btn-gold">Go</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teacher info (auto-fetched) -->
+        <div id="sal-teacher-info" class="hidden card p-4 mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+          <div><div class="text-xs text-slate-500">Name</div><div id="sti-name" class="text-white font-medium">—</div></div>
+          <div><div class="text-xs text-slate-500">Joining Date</div><div id="sti-join" class="text-white">—</div></div>
+          <div><div class="text-xs text-slate-500">Base Salary</div><div id="sti-base" class="text-amber-400 font-bold">—</div></div>
+          <div><div class="text-xs text-slate-500">This Month Present</div><div id="sti-present" class="text-green-400 font-bold">—</div></div>
+        </div>
+
+        <div id="sal-form" class="hidden mt-4 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div><label>Salary Month</label><input id="sal-month" type="month"></div>
+            <div><label>Advance (₹)</label><input id="sal-advance" type="number" placeholder="0" value="0"></div>
+            <div><label>Deductions (₹)</label><input id="sal-deduct" type="number" placeholder="0" value="0"></div>
+            <div><label>Paid Amount (₹)</label><input id="sal-paid" type="number" placeholder="Amount paid"></div>
+          </div>
+
+          <!-- Auto-calculated final -->
+          <div class="card p-4 grid grid-cols-3 gap-4 text-center">
+            <div><div class="text-xs text-slate-500">Payable Salary</div><div id="sal-payable" class="text-amber-400 font-bold text-lg">₹ —</div></div>
+            <div><div class="text-xs text-slate-500">Total Deductions</div><div id="sal-total-ded" class="text-red-400 font-bold text-lg">₹ 0</div></div>
+            <div><div class="text-xs text-slate-500">Net Payable</div><div id="sal-net" class="text-green-400 font-bold text-lg">₹ —</div></div>
+          </div>
+
+          <div class="flex gap-3">
+            <button onclick="saveSalary()" class="btn btn-gold">💾 Save Salary</button>
+            <button onclick="printSalarySlip()" class="btn btn-ghost">🖨 Print Slip</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teacher Registration -->
+      <div class="card p-5">
+        <h2 class="brand text-white text-base mb-4">Register New Teacher</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div><label>Full Name *</label><input id="t-name" placeholder="Teacher name"></div>
+          <div><label>Mobile *</label><input id="t-mobile" placeholder="10-digit" maxlength="10"></div>
+          <div><label>Aadhaar *</label><input id="t-aadhaar" placeholder="12-digit" maxlength="12"></div>
+          <div><label>Joining Date *</label><input id="t-join" type="date"></div>
+          <div><label>Base Salary (₹) *</label><input id="t-salary" type="number" placeholder="Monthly gross"></div>
+          <div><label>Religion</label><input id="t-religion" placeholder="Religion"></div>
+          <div><label>Caste</label><input id="t-caste" placeholder="Category"></div>
+          <div><label>Address</label><input id="t-address" placeholder="Full address"></div>
+          <div><label>Assigned Class</label>
+            <select id="t-class">
+              <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              <option>Class 4</option><option>Class 5</option>
+            </select>
+          </div>
+          <div><label>Aadhaar Front Image</label><input type="file" id="t-aad-front" accept="image/*" class="text-xs"></div>
+          <div><label>Aadhaar Back Image</label><input type="file" id="t-aad-back" accept="image/*" class="text-xs"></div>
+        </div>
+        <button onclick="registerTeacher()" class="btn btn-gold mt-4">💾 Register Teacher</button>
+      </div>
+    </section>
+
+    <!-- ====== EXPENDITURE ====== -->
+    <section id="sec-expenditure" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Record Expenditure</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div><label>Date *</label><input id="exp-date" type="date"></div>
+          <div><label>Category *</label>
+            <select id="exp-cat">
+              <option value="">Select Category</option>
+              <option>Lunch</option><option>Electricity</option><option>Transport</option>
+              <option>Maintenance</option><option>Office Expenses</option><option>Other</option>
+            </select>
+          </div>
+          <div><label>Amount (₹) *</label><input id="exp-amount" type="number" placeholder="0"></div>
+          <div><label>Description</label><input id="exp-desc" placeholder="Brief note"></div>
+        </div>
+        <button onclick="submitExpenditure()" class="btn btn-gold mt-4">💾 Add Expenditure</button>
+      </div>
+
+      <!-- Expenditure table -->
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-sm font-semibold text-white">Expenditure Log</div>
+          <select id="exp-filter-month" onchange="loadExpenditures()" class="!w-40 text-xs">
+            <option value="">All months</option>
+          </select>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>Date</th><th>Category</th><th>Amount (₹)</th><th>Description</th></tr></thead>
+            <tbody id="exp-tbody">
+              <tr><td colspan="4" class="text-center text-slate-500 py-4 text-xs">No records</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-3 pt-3 border-t border-white/8 flex justify-between text-sm">
+          <span class="text-slate-500">Total</span>
+          <span class="text-amber-400 font-bold" id="exp-total">₹ 0</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Hidden print area -->
+<div id="print-area" style="display:none"></div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl text-sm font-semibold"></div>
+
+<script>
+if (!Session.requireRole("accountant","principal")) {}
+const sess = Session.get();
+document.getElementById("user-name").textContent = sess.name || sess.mobile;
+document.getElementById("sess-label").textContent = CONFIG.SESSION_LABEL;
+
+function showSection(id) {
+  ["admission","fee","salary","expenditure"].forEach(s => {
+    document.getElementById("sec-"+s).classList.toggle("hidden", s !== id);
+    document.getElementById("nav-"+s).classList.toggle("active", s === id);
+  });
+}
+
+// ---- ROLL NUMBER ----
+let rollCounter = 1;
+async function generateRoll() {
+  const cls = document.getElementById("a-class").value;
+  const year = new Date().getFullYear();
+  const num  = String(Math.floor(Math.random() * 900) + 100);
+  document.getElementById("a-roll").value = `${year}${num}`;
+}
+document.getElementById("a-date").value = today();
+generateRoll();
+
+// ---- ADMISSION ----
+async function submitAdmission() {
+  const fields = {
+    roll: document.getElementById("a-roll").value,
+    name: document.getElementById("a-name").value.trim(),
+    father: document.getElementById("a-father").value.trim(),
+    cls: document.getElementById("a-class").value,
+    aadhaar: document.getElementById("a-aadhaar").value.trim(),
+    mobile: document.getElementById("a-mobile").value.trim(),
+    age: document.getElementById("a-age").value,
+    religion: document.getElementById("a-religion").value.trim(),
+    caste: document.getElementById("a-caste").value.trim(),
+    date: document.getElementById("a-date").value,
+    admFee: document.getElementById("a-admfee").value || "0",
+    depFee: document.getElementById("a-depfee").value || "0",
+    monthly: document.getElementById("a-monthly").value,
+    transport: document.getElementById("a-transport").value || "0",
+  };
+  const errEl = document.getElementById("adm-err");
+  errEl.classList.add("hidden");
+  if (!fields.name) { errEl.textContent="Name required"; errEl.classList.remove("hidden"); return; }
+  if (!Validate.aadhaar(fields.aadhaar)) { errEl.textContent="Invalid Aadhaar (12 digits)"; errEl.classList.remove("hidden"); return; }
+  if (!Validate.mobile(fields.mobile)) { errEl.textContent="Invalid Mobile"; errEl.classList.remove("hidden"); return; }
+  if (!fields.monthly) { errEl.textContent="Monthly fee required"; errEl.classList.remove("hidden"); return; }
+
+  const res = await API.addStudent(fields);
+  if (res && res.success) {
+    showAdmissionSuccess(fields);
+    toast("Admission saved ✓", "green");
+    generateRoll();
+  } else {
+    toast((res && res.error) || "Save failed – check GAS connection", "red");
+  }
+}
+
+function showAdmissionSuccess(f) {
+  document.getElementById("adm-success").classList.remove("hidden");
+  document.getElementById("adm-out-name").textContent  = f.name;
+  document.getElementById("adm-out-roll").textContent  = f.roll;
+  document.getElementById("adm-out-class").textContent = f.cls;
+  document.getElementById("adm-out-fee").textContent   = "₹" + f.monthly + "/month";
+  document.getElementById("adm-qr-label").textContent  = f.roll + " · " + f.cls;
+  document.getElementById("adm-qr-code").innerHTML = "";
+  const payload = `HEA|${f.roll}|${encodeURIComponent(f.name)}|${f.cls}`;
+  new QRCode(document.getElementById("adm-qr-code"), { text: payload, width:112, height:112,
+    colorDark:"#0f172a", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.H });
+}
+
+// ---- FEE COLLECTION ----
+let feeStudentData = null;
+document.getElementById("fee-month").value = new Date().toISOString().slice(0,7);
+
+async function fetchStudentFee() {
+  const roll = document.getElementById("fee-roll-search").value.trim();
+  if (!roll) { toast("Enter roll number", "red"); return; }
+  const res = await API.getStudents({ roll });
+  const s = (res && res.data && res.data[0]) || null;
+  if (!s) { toast("Student not found", "red"); return; }
+  feeStudentData = s;
+  // Calculate pending months since session start
+  const start = new Date(CONFIG.SESSION_START);
+  const now = new Date();
+  const months = (now.getFullYear()-start.getFullYear())*12 + now.getMonth() - start.getMonth() + 1;
+  const pending = (parseInt(s.monthly||0) * months) - parseInt(s.paidTotal||0);
+  document.getElementById("fsi-name").textContent = s.name;
+  document.getElementById("fsi-class").textContent = s.cls;
+  document.getElementById("fsi-monthly").textContent = "₹"+s.monthly;
+  document.getElementById("fsi-pending").textContent = "₹"+Math.max(0,pending);
+  document.getElementById("fee-student-info").classList.remove("hidden");
+  document.getElementById("fee-form").classList.remove("hidden");
+}
+
+async function submitFee() {
+  if (!feeStudentData) return;
+  const payload = {
+    roll: feeStudentData.roll,
+    name: feeStudentData.name,
+    cls: feeStudentData.cls,
+    month: document.getElementById("fee-month").value,
+    months: document.getElementById("fee-months").value,
+    deposited: document.getElementById("fee-deposited").value,
+    transport: document.getElementById("fee-transport").value || "0",
+    date: today(),
+    collectedBy: sess.mobile,
+  };
+  if (!Validate.feeAmount(payload.deposited)) { toast("Invalid amount", "red"); return; }
+  const res = await API.collectFee(payload);
+  if (res && res.success) {
+    toast("Fee collected ✓", "green");
+    printFeeSlip("fee", payload);
+  } else {
+    toast("Save failed", "red");
+  }
+}
+
+// ---- SALARY ----
+let salTeacher = null;
+document.getElementById("sal-month").value = new Date().toISOString().slice(0,7);
+
+async function fetchTeacher() {
+  const q = document.getElementById("sal-search").value.trim();
+  const res = await API.getTeachers({ search: q });
+  salTeacher = (res && res.data && res.data[0]) || null;
+  if (!salTeacher) { toast("Teacher not found", "red"); return; }
+  document.getElementById("sti-name").textContent    = salTeacher.name;
+  document.getElementById("sti-join").textContent    = salTeacher.joinDate || "—";
+  document.getElementById("sti-base").textContent    = "₹" + salTeacher.salary;
+  document.getElementById("sti-present").textContent = salTeacher.presentDays || "—";
+  document.getElementById("sal-payable").textContent  = "₹" + salTeacher.salary;
+  recalcSalary();
+  document.getElementById("sal-teacher-info").classList.remove("hidden");
+  document.getElementById("sal-form").classList.remove("hidden");
+}
+
+["sal-advance","sal-deduct"].forEach(id =>
+  document.getElementById(id)?.addEventListener("input", recalcSalary)
+);
+function recalcSalary() {
+  if (!salTeacher) return;
+  const adv = parseFloat(document.getElementById("sal-advance").value)||0;
+  const ded = parseFloat(document.getElementById("sal-deduct").value)||0;
+  const net = parseFloat(salTeacher.salary) - adv - ded;
+  document.getElementById("sal-total-ded").textContent = "₹" + (adv+ded);
+  document.getElementById("sal-net").textContent = "₹" + Math.max(0,net);
+}
+
+async function saveSalary() {
+  if (!salTeacher) return;
+  const data = {
+    teacherMobile: salTeacher.mobile,
+    name: salTeacher.name,
+    month: document.getElementById("sal-month").value,
+    baseSalary: salTeacher.salary,
+    advance: document.getElementById("sal-advance").value||0,
+    deductions: document.getElementById("sal-deduct").value||0,
+    paid: document.getElementById("sal-paid").value,
+    savedBy: sess.mobile,
+  };
+  const res = await API.saveSalary(data);
+  toast(res && res.success ? "Salary saved ✓" : "Save failed", res && res.success ? "green" : "red");
+}
+
+async function registerTeacher() {
+  const data = {
+    name: document.getElementById("t-name").value.trim(),
+    mobile: document.getElementById("t-mobile").value.trim(),
+    aadhaar: document.getElementById("t-aadhaar").value.trim(),
+    joinDate: document.getElementById("t-join").value,
+    salary: document.getElementById("t-salary").value,
+    religion: document.getElementById("t-religion").value,
+    caste: document.getElementById("t-caste").value,
+    address: document.getElementById("t-address").value,
+    assignedClass: document.getElementById("t-class").value,
+  };
+  if (!data.name || !Validate.mobile(data.mobile) || !data.salary) {
+    toast("Name, Mobile, and Salary are required", "red"); return;
+  }
+  const res = await API.addTeacher(data);
+  toast(res && res.success ? "Teacher registered ✓" : "Failed", res && res.success ? "green" : "red");
+}
+
+// ---- EXPENDITURE ----
+document.getElementById("exp-date").value = today();
+async function submitExpenditure() {
+  const data = {
+    date: document.getElementById("exp-date").value,
+    category: document.getElementById("exp-cat").value,
+    amount: document.getElementById("exp-amount").value,
+    desc: document.getElementById("exp-desc").value,
+    addedBy: sess.mobile,
+  };
+  if (!data.category || !Validate.feeAmount(data.amount)) { toast("Category & Amount required", "red"); return; }
+  const res = await API.addExpenditure(data);
+  if (res && res.success) { toast("Expenditure saved ✓", "green"); loadExpenditures(); }
+  else toast("Save failed", "red");
+}
+
+async function loadExpenditures() {
+  const res = await API.getExpenditure({});
+  const rows = (res && res.data) || [];
+  const tbody = document.getElementById("exp-tbody");
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-500 py-4 text-xs">No records</td></tr>'; return; }
+  let total = 0;
+  tbody.innerHTML = rows.map(r => {
+    total += parseFloat(r.amount||0);
+    return `<tr><td>${r.date}</td><td>${r.category}</td><td class="text-amber-400">₹${r.amount}</td><td class="text-slate-400">${r.desc||"—"}</td></tr>`;
+  }).join("");
+  document.getElementById("exp-total").textContent = "₹" + total.toFixed(2);
+}
+
+// ---- PRINT FEE SLIP ----
+function printFeeSlip(type, data) {
+  const area = document.getElementById("print-area");
+  area.innerHTML = `
+    <h2>Nitya Public School</h2>
+    <p style="text-align:center;font-size:11px;color:#555">Bhadewara, Karchhana, Prayagraj | Session: ${CONFIG.SESSION_LABEL}</p>
+    <hr style="margin:8px 0">
+    <p style="font-size:14px;font-weight:bold;text-align:center">${type==="admission"?"ADMISSION RECEIPT":"FEE RECEIPT"}</p>
+    <table style="margin-top:12px">
+      <tr><th>Field</th><th>Details</th></tr>
+      ${data ? Object.entries(data).filter(([k])=>!["apiKey","action"].includes(k)).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join("") : ""}
+    </table>
+    <p style="margin-top:12px;font-size:10px;text-align:center">Powered by Sant Digital Solution</p>
+  `;
+  window.print();
+}
+
+function printSalarySlip() {
+  if (!salTeacher) return;
+  const area = document.getElementById("print-area");
+  area.innerHTML = `
+    <h2>Nitya Public School – Salary Slip</h2>
+    <p style="text-align:center;font-size:11px">Session: ${CONFIG.SESSION_LABEL}</p>
+    <hr style="margin:8px 0">
+    <table>
+      <tr><th>Field</th><th>Details</th></tr>
+      <tr><td>Teacher Name</td><td>${salTeacher.name}</td></tr>
+      <tr><td>Month</td><td>${document.getElementById("sal-month").value}</td></tr>
+      <tr><td>Base Salary</td><td>₹${salTeacher.salary}</td></tr>
+      <tr><td>Advance</td><td>₹${document.getElementById("sal-advance").value||0}</td></tr>
+      <tr><td>Deductions</td><td>₹${document.getElementById("sal-deduct").value||0}</td></tr>
+      <tr><td>Paid Amount</td><td>₹${document.getElementById("sal-paid").value||0}</td></tr>
+    </table>
+    <p style="margin-top:12px;font-size:10px;text-align:center">Powered by Sant Digital Solution</p>
+  `;
+  window.print();
+}
+
+function toast(msg, type = "green") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = `toast fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl text-sm font-semibold ${type==="green"?"bg-green-900/90 text-green-300 border border-green-700":"bg-red-900/90 text-red-300 border border-red-700"}`;
+  setTimeout(() => el.classList.add("hidden"), 3000);
+}
+function doLogout() { Session.clear(); location.href = "index.html"; }
+
+// init
+loadExpenditures();
+</script>
+</body>
+</html>

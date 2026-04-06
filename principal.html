@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Principal – Nitya Public School</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="js/config.js"></script>
+<style>
+  *{font-family:'DM Sans',sans-serif}
+  .brand{font-family:'Playfair Display',serif}
+  body{background:#0a0f1e;color:#f1f5f9}
+  .glass{background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.09)}
+  .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1rem}
+  .btn{border-radius:.75rem;padding:.5rem 1rem;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;border:none}
+  .btn-gold{background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0f1e}
+  .btn-gold:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(245,158,11,.35)}
+  .btn-ghost{background:rgba(255,255,255,0.07);color:#94a3b8;border:1px solid rgba(255,255,255,0.1)}
+  .btn-red{background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+  .btn-green{background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
+  .btn-blue{background:rgba(59,130,246,0.2);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)}
+  .nav-item{padding:.55rem 1rem;border-radius:.75rem;cursor:pointer;font-size:.82rem;transition:all .15s;color:#94a3b8}
+  .nav-item.active,.nav-item:hover{background:rgba(245,158,11,0.15);color:#f59e0b}
+  label{font-size:.72rem;color:#94a3b8;display:block;margin-bottom:.3rem}
+  input,select,textarea{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#f1f5f9;border-radius:.75rem;padding:.55rem 1rem;font-size:.8rem;width:100%}
+  input:focus,select:focus{outline:none;border-color:#f59e0b}
+  select option{background:#1e293b}
+  table{width:100%;border-collapse:collapse}
+  th{padding:.6rem 1rem;text-align:left;font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:#64748b;border-bottom:1px solid rgba(255,255,255,0.07)}
+  td{padding:.65rem 1rem;font-size:.78rem;border-bottom:1px solid rgba(255,255,255,0.04)}
+  .badge{padding:.18rem .55rem;border-radius:9999px;font-size:.66rem;font-weight:600}
+  .paid{background:rgba(34,197,94,0.15);color:#4ade80}
+  .due{background:rgba(239,68,68,0.15);color:#f87171}
+  .stat-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:1rem;padding:1.2rem}
+  .sidebar{width:220px;min-width:220px}
+  .toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;padding:.7rem 1.2rem;border-radius:.75rem;font-size:.8rem;font-weight:600}
+  @media print{body>*:not(#print-area){display:none!important}#print-area{display:block!important;color:black;background:white;padding:20px;font-family:serif}}
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- HEADER -->
+<header class="glass fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg bg-amber-500/25 border border-amber-400/30 flex items-center justify-center text-amber-300 text-xs font-bold">NPS</div>
+    <div>
+      <div class="brand text-white text-sm">Nitya Public School</div>
+      <div class="text-xs text-slate-500">Principal Portal · Full Access</div>
+    </div>
+  </div>
+  <div class="flex items-center gap-3">
+    <span class="hidden sm:block text-xs text-amber-400 border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 rounded-full">🏫 Principal</span>
+    <span class="text-sm text-slate-300" id="user-name">—</span>
+    <button onclick="doLogout()" class="btn btn-ghost text-xs">Logout</button>
+  </div>
+</header>
+
+<div class="flex flex-1 pt-14">
+  <!-- SIDEBAR -->
+  <aside class="sidebar glass fixed left-0 top-14 bottom-0 p-3 flex flex-col gap-0.5 overflow-y-auto z-40">
+    <div class="text-xs text-slate-600 uppercase tracking-widest mb-2 px-2">Dashboard</div>
+    <div onclick="showSection('overview')"   class="nav-item active" id="nav-overview">📊 Overview</div>
+    <div onclick="showSection('students')"   class="nav-item" id="nav-students">👨‍🎓 Students</div>
+    <div onclick="showSection('teachers')"   class="nav-item" id="nav-teachers">👩‍🏫 Teachers</div>
+    <div onclick="showSection('attendance')" class="nav-item" id="nav-attendance">📋 Attendance</div>
+    <div onclick="showSection('fees')"       class="nav-item" id="nav-fees">💰 Fees</div>
+    <div onclick="showSection('salary')"     class="nav-item" id="nav-salary">💼 Salary Approvals</div>
+    <div onclick="showSection('reports')"    class="nav-item" id="nav-reports">📄 Reports & Print</div>
+    <div onclick="showSection('analytics')"  class="nav-item" id="nav-analytics">📈 Analytics</div>
+    <div class="mt-auto pt-3 border-t border-white/5 text-xs text-slate-700 text-center">Sant Digital Solution</div>
+  </aside>
+
+  <main class="flex-1 ml-0 md:ml-56 p-5 space-y-5">
+
+    <!-- ===== OVERVIEW ===== -->
+    <section id="sec-overview" class="space-y-4">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="stat-card"><div class="text-xs text-slate-500 mb-1">Total Students</div><div class="text-2xl font-bold text-white" id="stat-students">—</div><div class="text-xs text-amber-400 mt-1">This Session</div></div>
+        <div class="stat-card"><div class="text-xs text-slate-500 mb-1">Today's Attendance</div><div class="text-2xl font-bold text-green-400" id="stat-att">—%</div><div class="text-xs text-slate-500 mt-1" id="stat-att-sub">—</div></div>
+        <div class="stat-card"><div class="text-xs text-slate-500 mb-1">Monthly Income</div><div class="text-2xl font-bold text-amber-400" id="stat-income">₹—</div><div class="text-xs text-slate-500 mt-1">Fee collected</div></div>
+        <div class="stat-card"><div class="text-xs text-slate-500 mb-1">Pending Salary</div><div class="text-2xl font-bold text-red-400" id="stat-salary">—</div><div class="text-xs text-slate-500 mt-1">Awaiting approval</div></div>
+      </div>
+
+      <!-- Pending salary approvals -->
+      <div class="card p-5">
+        <div class="text-sm font-semibold text-white mb-3">⏳ Pending Salary Approvals</div>
+        <div id="pending-approvals" class="space-y-2">
+          <div class="text-xs text-slate-500 text-center py-4">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Monthly attendance % -->
+      <div class="card p-5">
+        <div class="text-sm font-semibold text-white mb-3">📅 Monthly Attendance Summary</div>
+        <div id="att-summary" class="space-y-2 text-xs text-slate-400">Loading…</div>
+      </div>
+    </section>
+
+    <!-- ===== STUDENTS ===== -->
+    <section id="sec-students" class="hidden space-y-4">
+      <div class="card p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="brand text-white text-lg">All Students</h2>
+          <div class="flex gap-2">
+            <select id="filter-class" onchange="loadAllStudents()" class="!w-36 text-xs">
+              <option value="">All Classes</option>
+              <option>Nursery</option><option>KG</option>
+              <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              <option>Class 4</option><option>Class 5</option><option>Class 6</option>
+              <option>Class 7</option><option>Class 8</option>
+            </select>
+            <button onclick="exportStudentsExcel()" class="btn btn-ghost text-xs">📥 Export Excel</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>Roll</th><th>Name</th><th>Father</th><th>Class</th><th>Aadhaar</th><th>Mobile</th><th>Fee Status</th><th>Actions</th></tr></thead>
+            <tbody id="all-students-tbody">
+              <tr><td colspan="8" class="text-center text-slate-500 py-4 text-xs">Click to load</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TEACHERS ===== -->
+    <section id="sec-teachers" class="hidden space-y-4">
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="brand text-white text-lg">All Teachers</h2>
+          <button onclick="loadTeachers()" class="btn btn-ghost text-xs">🔄 Refresh</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>Name</th><th>Mobile</th><th>Class</th><th>Join Date</th><th>Salary</th><th>This Month P</th><th>Actions</th></tr></thead>
+            <tbody id="teachers-tbody">
+              <tr><td colspan="7" class="text-center text-slate-500 py-4 text-xs">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ATTENDANCE ===== -->
+    <section id="sec-attendance" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Attendance Records</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          <div><label>Class</label>
+            <select id="att-filter-cls">
+              <option value="">All Classes</option>
+              <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              <option>Class 4</option><option>Class 5</option>
+            </select>
+          </div>
+          <div><label>Date From</label><input type="date" id="att-from"></div>
+          <div><label>Date To</label><input type="date" id="att-to"></div>
+        </div>
+        <button onclick="loadAttendanceRecords()" class="btn btn-gold mb-4">🔍 View Records</button>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Date</th><th>Status</th><th>Mode</th></tr></thead>
+            <tbody id="att-records-tbody">
+              <tr><td colspan="6" class="text-center text-slate-500 py-4 text-xs">Select filters and search</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FEES ===== -->
+    <section id="sec-fees" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Fee Records</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div><label>Search by Roll / Name</label><input id="fee-search-p" placeholder="Enter roll or name"></div>
+          <div><label>Status Filter</label>
+            <select id="fee-status-filter">
+              <option value="">All</option>
+              <option>Paid</option><option>Due</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="loadFeeRecords()" class="btn btn-gold mb-4">🔍 Search</button>
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Monthly</th><th>Total Paid</th><th>Pending</th><th>Status</th></tr></thead>
+            <tbody id="fee-records-tbody">
+              <tr><td colspan="7" class="text-center text-slate-500 py-4 text-xs">Search to view</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SALARY APPROVAL ===== -->
+    <section id="sec-salary" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Salary Approvals (By Attendance)</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div><label>Month</label><input id="sal-approve-month" type="month"></div>
+          <div><label>Teacher Name (optional)</label><input id="sal-approve-name" placeholder="Filter by name"></div>
+        </div>
+        <button onclick="loadSalaryApprovals()" class="btn btn-gold mb-4">🔍 Load Pending</button>
+        <div id="approval-list" class="space-y-3">
+          <div class="text-xs text-slate-500 text-center py-4">Select month to view pending approvals</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== REPORTS ===== -->
+    <section id="sec-reports" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Generate Reports & Print</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <!-- ID Card -->
+          <div class="card p-4 space-y-2">
+            <div class="text-sm font-medium text-white">🪪 Student ID Card (Visiting Card size + QR)</div>
+            <div><label>Roll Number</label><input id="rpt-id-roll" placeholder="Roll number"></div>
+            <button onclick="generateIDCard()" class="btn btn-gold w-full">Generate & Print</button>
+          </div>
+
+          <!-- Admit Card -->
+          <div class="card p-4 space-y-2">
+            <div class="text-sm font-medium text-white">📄 Admit Card (Half A4)</div>
+            <div><label>Exam Name</label><input id="rpt-admit-exam" placeholder="e.g. Annual Exam 2025"></div>
+            <div><label>Class</label>
+              <select id="rpt-admit-cls">
+                <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              </select>
+            </div>
+            <button onclick="generateAdmitCards()" class="btn btn-gold w-full">Generate & Print</button>
+          </div>
+
+          <!-- Report Card -->
+          <div class="card p-4 space-y-2">
+            <div class="text-sm font-medium text-white">📊 Report Card (A4)</div>
+            <div><label>Roll Number</label><input id="rpt-rc-roll" placeholder="Roll number"></div>
+            <button onclick="generateReportCard()" class="btn btn-gold w-full">Generate & Print</button>
+          </div>
+
+          <!-- Time Table -->
+          <div class="card p-4 space-y-2">
+            <div class="text-sm font-medium text-white">🗓 Exam Time Table (Half A4)</div>
+            <div><label>Exam Name</label><input id="rpt-tt-exam" placeholder="Exam name"></div>
+            <div><label>Class</label>
+              <select id="rpt-tt-cls">
+                <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+              </select>
+            </div>
+            <button onclick="generateTimeTable()" class="btn btn-gold w-full">Generate & Print</button>
+          </div>
+
+          <!-- Student-wise full year status -->
+          <div class="card p-4 space-y-2">
+            <div class="text-sm font-medium text-white">📋 Student Year Status (Attendance + Fees)</div>
+            <div><label>Class (optional)</label>
+              <select id="rpt-yr-cls"><option value="">All</option><option>Class 1</option><option>Class 2</option></select>
+            </div>
+            <button onclick="generateYearStatus()" class="btn btn-gold w-full">Generate & Export</button>
+          </div>
+
+          <!-- Teacher salary slip -->
+          <div class="card p-4 space-y-2">
+            <div class="text-sm font-medium text-white">💼 Teacher Salary Slip</div>
+            <div><label>Teacher Mobile</label><input id="rpt-sal-mobile" placeholder="Mobile number"></div>
+            <div><label>Period</label>
+              <select id="rpt-sal-period">
+                <option value="current">Current Month</option>
+                <option value="session">Full Session</option>
+              </select>
+            </div>
+            <button onclick="generateSalarySlip()" class="btn btn-gold w-full">Generate & Print</button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ANALYTICS ===== -->
+    <section id="sec-analytics" class="hidden space-y-4">
+      <div class="card p-5">
+        <h2 class="brand text-white text-lg mb-4">Income vs Expenditure</h2>
+        <canvas id="income-chart" height="200"></canvas>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="card p-5">
+          <div class="text-sm font-semibold text-white mb-3">Fee Collection by Class</div>
+          <canvas id="fee-chart" height="200"></canvas>
+        </div>
+        <div class="card p-5">
+          <div class="text-sm font-semibold text-white mb-3">Attendance Trend (Last 7 Days)</div>
+          <canvas id="att-chart" height="200"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Print area -->
+<div id="print-area" style="display:none"></div>
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<script>
+if (!Session.requireRole("principal")) {}
+const sess = Session.get();
+document.getElementById("user-name").textContent = sess.name || sess.mobile;
+document.getElementById("sal-approve-month").value = new Date().toISOString().slice(0,7);
+const attFrom = document.getElementById("att-from");
+const attTo   = document.getElementById("att-to");
+if (attFrom) attFrom.value = new Date(new Date().setDate(1)).toISOString().split("T")[0];
+if (attTo)   attTo.value   = today();
+
+// ---- NAV ----
+const sections = ["overview","students","teachers","attendance","fees","salary","reports","analytics"];
+function showSection(id) {
+  sections.forEach(s => {
+    document.getElementById("sec-"+s).classList.toggle("hidden", s !== id);
+    document.getElementById("nav-"+s).classList.toggle("active", s === id);
+  });
+  if (id==="students")  loadAllStudents();
+  if (id==="teachers")  loadTeachers();
+  if (id==="analytics") loadCharts();
+}
+
+// ---- OVERVIEW stats ----
+async function loadOverview() {
+  // Demo stats (replace with API calls)
+  document.getElementById("stat-students").textContent = "248";
+  document.getElementById("stat-att").textContent = "87%";
+  document.getElementById("stat-att-sub").textContent = "215 of 248 present";
+  document.getElementById("stat-income").textContent = "₹1,24,500";
+  document.getElementById("stat-salary").textContent = "3";
+  loadPendingApprovals();
+}
+
+async function loadPendingApprovals() {
+  const res = await API.call("getPendingSalaries", {});
+  const list = (res && res.data) || demoApprovals();
+  const el = document.getElementById("pending-approvals");
+  if (!list.length) { el.innerHTML = '<div class="text-xs text-slate-500 text-center py-4">No pending approvals ✓</div>'; return; }
+  el.innerHTML = list.map(a => `
+    <div class="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
+      <div>
+        <div class="text-sm text-white font-medium">${a.name}</div>
+        <div class="text-xs text-slate-400">${a.month} · ${a.presentDays} days present · Net: <span class="text-amber-400 font-bold">₹${a.net}</span></div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="approveSalary('${a.id}','${a.teacherMobile}')" class="btn btn-green text-xs">✓ Approve</button>
+        <button onclick="editSalary('${a.id}')" class="btn btn-ghost text-xs">Edit</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function demoApprovals() {
+  return [
+    {id:"1",name:"Sunita Sharma",month:"2025-04",presentDays:22,net:18000,teacherMobile:"9876543210"},
+    {id:"2",name:"Ramesh Verma",month:"2025-04",presentDays:20,net:15500,teacherMobile:"9876543211"},
+  ];
+}
+
+async function approveSalary(id, mobile) {
+  const res = await API.approveSalary({ id, mobile, approvedBy: sess.mobile });
+  toast(res && res.success ? "Salary approved ✓" : "Failed", res && res.success ? "green" : "red");
+  if (res && res.success) loadPendingApprovals();
+}
+
+// ---- STUDENTS ----
+async function loadAllStudents() {
+  const cls = document.getElementById("filter-class").value;
+  const res = await API.getStudents({ cls, session: CONFIG.SESSION_LABEL });
+  const rows = (res && res.data) || demoStudentRows();
+  const tbody = document.getElementById("all-students-tbody");
+  tbody.innerHTML = rows.map(s => `
+    <tr>
+      <td class="font-mono text-amber-400 text-xs">${s.roll}</td>
+      <td class="text-white">${s.name}</td>
+      <td class="text-slate-400">${s.father||"—"}</td>
+      <td>${s.cls}</td>
+      <td class="font-mono text-xs text-slate-400">${maskAadhaar(s.aadhaar,"principal")}</td>
+      <td class="text-slate-400">${s.mobile||"—"}</td>
+      <td><span class="badge ${s.feeStatus==="Paid"?"paid":"due"}">${s.feeStatus||"Due"}</span></td>
+      <td>
+        <div class="flex gap-1">
+          <button onclick="editStudent('${s.roll}')" class="btn btn-ghost text-xs py-1 px-2">Edit</button>
+          <button onclick="deleteStudent('${s.roll}','${s.name}')" class="btn btn-red text-xs py-1 px-2">Del</button>
+        </div>
+      </td>
+    </tr>`).join("");
+}
+
+function demoStudentRows() {
+  return [1,2,3].map(i => ({roll:`2024${String(i).padStart(3,"0")}`,name:`Student ${i}`,father:`Father ${i}`,cls:"Class 1",aadhaar:"123456789012",mobile:"9876543210",feeStatus:i%2===0?"Paid":"Due"}));
+}
+
+async function deleteStudent(roll, name) {
+  if (!confirm(`Delete student ${name} (${roll})? This cannot be undone.`)) return;
+  const res = await API.deleteStudent({ roll });
+  toast(res && res.success ? "Deleted ✓" : "Failed", res && res.success ? "green" : "red");
+  if (res && res.success) loadAllStudents();
+}
+
+function editStudent(roll) { toast("Edit form – open accountant admission page for: " + roll, "green"); }
+
+// ---- TEACHERS ----
+async function loadTeachers() {
+  const res = await API.getTeachers({});
+  const rows = (res && res.data) || [{name:"Demo Teacher",mobile:"9999999999",assignedClass:"Class 1",joinDate:"2024-04-01",salary:"20000",presentDays:"22"}];
+  document.getElementById("teachers-tbody").innerHTML = rows.map(t => `
+    <tr>
+      <td class="text-white">${t.name}</td>
+      <td class="font-mono text-xs text-slate-400">${t.mobile}</td>
+      <td>${t.assignedClass||"—"}</td>
+      <td class="text-slate-400">${t.joinDate||"—"}</td>
+      <td class="text-amber-400 font-bold">₹${t.salary}</td>
+      <td class="text-green-400">${t.presentDays||"—"}</td>
+      <td><div class="flex gap-1">
+        <button onclick="editTeacher('${t.mobile}')" class="btn btn-ghost text-xs py-1 px-2">Edit</button>
+        <button class="btn btn-red text-xs py-1 px-2">Del</button>
+      </div></td>
+    </tr>`).join("");
+}
+
+// ---- ATTENDANCE RECORDS ----
+async function loadAttendanceRecords() {
+  const cls  = document.getElementById("att-filter-cls").value;
+  const from = document.getElementById("att-from").value;
+  const to   = document.getElementById("att-to").value;
+  const res  = await API.getAttendance({ cls, from, to });
+  const rows = (res && res.data) || [];
+  const tbody = document.getElementById("att-records-tbody");
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-500 py-4 text-xs">No records found</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="font-mono text-xs text-amber-400">${r.roll}</td>
+      <td>${r.name}</td><td>${r.cls}</td><td>${r.date}</td>
+      <td><span class="badge ${r.status==="P"?"paid":"due"}">${r.status==="P"?"Present":"Absent"}</span></td>
+      <td class="text-slate-400 text-xs">${r.mode||"Manual"}</td>
+    </tr>`).join("");
+}
+
+// ---- FEES ----
+async function loadFeeRecords() {
+  const res  = await API.getFees({ search: document.getElementById("fee-search-p").value });
+  const rows = (res && res.data) || [];
+  const tbody = document.getElementById("fee-records-tbody");
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-500 py-4 text-xs">No records</td></tr>'; return; }
+  tbody.innerHTML = rows.map(s => {
+    const start = new Date(CONFIG.SESSION_START);
+    const now = new Date();
+    const months = (now.getFullYear()-start.getFullYear())*12+now.getMonth()-start.getMonth()+1;
+    const pending = Math.max(0,(parseInt(s.monthly||0)*months) - parseInt(s.paidTotal||0));
+    return `<tr>
+      <td class="font-mono text-xs text-amber-400">${s.roll}</td>
+      <td>${s.name}</td><td>${s.cls}</td>
+      <td>₹${s.monthly}</td><td class="text-green-400">₹${s.paidTotal||0}</td>
+      <td class="text-red-400">₹${pending}</td>
+      <td><span class="badge ${pending===0?"paid":"due"}">${pending===0?"Paid":"Due"}</span></td>
+    </tr>`;
+  }).join("");
+}
+
+// ---- SALARY APPROVALS ----
+async function loadSalaryApprovals() {
+  const month = document.getElementById("sal-approve-month").value;
+  const name  = document.getElementById("sal-approve-name").value;
+  const res   = await API.call("getPendingSalaries", { month, name });
+  const list  = (res && res.data) || demoApprovals();
+  const el    = document.getElementById("approval-list");
+  if (!list.length) { el.innerHTML = '<div class="text-xs text-slate-500 text-center py-4">No pending approvals ✓</div>'; return; }
+  el.innerHTML = list.map(a => `
+    <div class="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
+      <div>
+        <div class="text-sm text-white font-medium">${a.name}</div>
+        <div class="text-xs text-slate-400">${a.month} · <span class="text-green-400">${a.presentDays} days present</span> · Net: <span class="text-amber-400 font-bold">₹${a.net}</span></div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="approveSalary('${a.id}','${a.teacherMobile}')" class="btn btn-green text-xs">✓ Approve</button>
+        <button class="btn btn-ghost text-xs">Edit</button>
+      </div>
+    </div>`).join("");
+}
+
+// ---- REPORTS ----
+function generateIDCard() {
+  const roll = document.getElementById("rpt-id-roll").value.trim();
+  if (!roll) { toast("Enter Roll Number", "red"); return; }
+  const area = document.getElementById("print-area");
+  area.innerHTML = `
+    <div style="width:85mm;border:1px solid #333;border-radius:6px;padding:10px;font-family:sans-serif;text-align:center">
+      <div style="font-size:10px;font-weight:bold">Nitya Public School</div>
+      <div style="font-size:8px;color:#666">Bhadewara, Karchhana, Prayagraj</div>
+      <hr style="margin:5px 0">
+      <div id="print-qr-id" style="margin:4px auto;width:70px;height:70px"></div>
+      <div style="font-size:10px;font-weight:bold;margin-top:4px">Roll: ${roll}</div>
+      <div style="font-size:8px;color:#888;margin-top:2px">Session: ${CONFIG.SESSION_LABEL}</div>
+    </div>`;
+  const qrDiv = area.querySelector("#print-qr-id");
+  new QRCode(qrDiv, { text:`NPS|${roll}||`, width:70, height:70 });
+  setTimeout(() => window.print(), 400);
+}
+
+function generateAdmitCards() {
+  const exam = document.getElementById("rpt-admit-exam").value || "Examination 2025";
+  const cls  = document.getElementById("rpt-admit-cls").value;
+  document.getElementById("print-area").innerHTML = `
+    <h2 style="text-align:center">${CONFIG.SCHOOL_NAME}</h2>
+    <p style="text-align:center;font-size:11px">ADMIT CARD – ${exam}</p>
+    <p style="text-align:center;font-size:10px">Class: ${cls} | Session: ${CONFIG.SESSION_LABEL}</p>
+    <hr>
+    <table><tr><th>Roll No</th><th>Name</th><th>Class</th><th>Signature</th></tr>
+    <tr><td>____</td><td>____</td><td>${cls}</td><td>________</td></tr></table>
+    <p style="font-size:9px;text-align:center;margin-top:15px">Powered by Sant Digital Solution</p>`;
+  window.print();
+}
+
+function generateReportCard() {
+  document.getElementById("print-area").innerHTML = `
+    <h2 style="text-align:center">Nitya Public School – Report Card</h2>
+    <p style="text-align:center;font-size:10px">Session: ${CONFIG.SESSION_LABEL}</p>
+    <hr>
+    <table><tr><th>Subject</th><th>Max Marks</th><th>Obtained</th><th>Grade</th></tr>
+    <tr><td>English</td><td>100</td><td>—</td><td>—</td></tr>
+    <tr><td>Maths</td><td>100</td><td>—</td><td>—</td></tr>
+    <tr><td>Science</td><td>100</td><td>—</td><td>—</td></tr>
+    </table>
+    <p style="font-size:9px;text-align:center;margin-top:15px">Powered by Sant Digital Solution</p>`;
+  window.print();
+}
+
+function generateTimeTable() {
+  document.getElementById("print-area").innerHTML = `
+    <h2 style="text-align:center">Examination Time Table</h2>
+    <p style="text-align:center;font-size:10px">${document.getElementById("rpt-tt-exam").value} | ${CONFIG.SESSION_LABEL}</p>
+    <table><tr><th>Date</th><th>Day</th><th>Subject</th><th>Time</th></tr>
+    <tr><td>—</td><td>—</td><td>—</td><td>10:00–12:00</td></tr></table>
+    <p style="font-size:9px;text-align:center;margin-top:15px">Powered by Sant Digital Solution</p>`;
+  window.print();
+}
+
+function generateYearStatus() { toast("Fetching yearly data… (connect API)", "green"); }
+
+function generateSalarySlip() {
+  const mobile = document.getElementById("rpt-sal-mobile").value.trim();
+  if (!Validate.mobile(mobile)) { toast("Enter valid mobile","red"); return; }
+  document.getElementById("print-area").innerHTML = `
+    <h2 style="text-align:center">Salary Slip – ${CONFIG.SCHOOL_NAME}</h2>
+    <p style="text-align:center;font-size:10px">Session: ${CONFIG.SESSION_LABEL}</p>
+    <table><tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Mobile</td><td>${mobile}</td></tr>
+    <tr><td>Month</td><td>${new Date().toLocaleString("default",{month:"long",year:"numeric"})}</td></tr>
+    </table>
+    <p style="font-size:9px;text-align:center;margin-top:15px">Powered by Sant Digital Solution</p>`;
+  window.print();
+}
+
+function exportStudentsExcel() { toast("Export – connect to Google Sheets export API","green"); }
+
+// ---- CHARTS ----
+let chartsInited = false;
+function loadCharts() {
+  if (chartsInited) return;
+  chartsInited = true;
+  const months = ["Oct","Nov","Dec","Jan","Feb","Mar","Apr"];
+  const chartOpts = { responsive: true, plugins: { legend: { labels: { color:"#94a3b8", font:{size:11} } } }, scales: { x:{ticks:{color:"#64748b"}}, y:{ticks:{color:"#64748b"},grid:{color:"rgba(255,255,255,0.05)"}} } };
+  new Chart(document.getElementById("income-chart"), {
+    type:"bar",
+    data: { labels: months, datasets: [
+      { label:"Income (₹)", data:[85000,90000,78000,95000,88000,102000,124500], backgroundColor:"rgba(245,158,11,0.7)", borderRadius:6 },
+      { label:"Expenditure (₹)", data:[22000,25000,19000,28000,21000,31000,26000], backgroundColor:"rgba(239,68,68,0.5)", borderRadius:6 },
+    ]}, options: chartOpts,
+  });
+  new Chart(document.getElementById("fee-chart"), {
+    type:"doughnut",
+    data: { labels:["Class 1","Class 2","Class 3","Class 4","Class 5"],
+      datasets:[{ data:[22000,18000,24000,19000,21000], backgroundColor:["#f59e0b","#10b981","#3b82f6","#8b5cf6","#ef4444"], borderWidth:0 }] },
+    options:{ responsive:true, plugins:{ legend:{ labels:{ color:"#94a3b8", font:{size:11} } } } },
+  });
+  new Chart(document.getElementById("att-chart"), {
+    type:"line",
+    data: { labels:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+      datasets:[{ label:"Attendance %", data:[88,91,85,93,87,76,0], borderColor:"#f59e0b", backgroundColor:"rgba(245,158,11,0.1)", fill:true, tension:.4, pointBackgroundColor:"#f59e0b" }] },
+    options: chartOpts,
+  });
+}
+
+// ---- HELPERS ----
+function toast(msg, type="green") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = `toast fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl text-sm font-semibold ${type==="green"?"bg-green-900/90 text-green-300 border border-green-700":"bg-red-900/90 text-red-300 border border-red-700"}`;
+  el.classList.remove("hidden");
+  setTimeout(() => el.classList.add("hidden"), 3500);
+}
+function doLogout() { Session.clear(); location.href="index.html"; }
+function editTeacher(m) { toast("Edit teacher: "+m, "green"); }
+
+// Init
+loadOverview();
+</script>
+</body>
+</html>
